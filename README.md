@@ -1,12 +1,11 @@
 # 个人工作看板
 
-一个**本地优先**的局域网看板系统：在 Mac（或任意一台常开电脑）上跑一个 FastAPI 服务， iPad / 手机 / 另一台电脑用浏览器打开就能看。日程、待办、便签、大模型余额、久坐计时、休息提醒，全部通过 WebSocket 实时同步——在 Mac 上改一下，iPad 秒级刷新。
+一个**本地优先**的局域网看板系统：在 Mac（或任意一台常开电脑）上跑一个 FastAPI 服务，iPad / 手机 / 另一台电脑用浏览器打开就能看。日历、便签、久坐计时通过 WebSocket 实时同步——在电脑上改一下，iPad 秒级刷新。
 
 - 🖥 **本地优先**：数据以 JSON 文件存在本机，无云依赖、无数据库，随改随看。
 - ⚡ **实时推送**：文件监听 + WebSocket，编辑 `data/*.json` 或使用网页编辑器，看板立即更新。
 - 📱 **为大屏而生**：横屏 iPad 常驻展示，组件可自由排序、调整大小。
 - 🔧 **易于扩展**：新增一个组件只需四个文件级步骤（见下文）。
-- 🔐 **凭证不外泄**：密钥/登录态只放本地 `config.yaml`，已默认被 `.gitignore` 排除。
 
 ---
 
@@ -14,19 +13,17 @@
 
 | 组件 | 说明 |
 | --- | --- |
-| 日程 `schedule` | 今日日程，按时间排序，支持全天事件 |
-| 待办 `todos` | 待办清单，支持优先级 |
-| 便签 `notes` | 便签，置顶优先 |
-| 模型余额 `balances` | DeepSeek（API Key）、MiMo（浏览器 Cookie，可自动刷新）余额/额度 |
-| 久坐计时 `sitting` | 连续久坐计时与提醒，含离座/回座 |
-| 日历 `calendar` | 月历视图 |
+| 日历 `calendar` | 工作日周历视图，按天记录事项，可勾选完成 |
+| 便签 `notes` | 便签墙，置顶优先 |
+| 久坐计时 `sitting` | 连续久坐计时与提醒，含离座/回座/开会 |
+| 休息提醒 | 按配置的时间点在看板上弹出休息提示 |
 
-另含：Mac 端网页编辑器（`/editor.html`）、定时休息提醒、健康检查。
+另含：网页编辑器（`/editor.html`）、健康检查。
 
 ## 技术栈
 
-Python 3.10+ · FastAPI · Uvicorn · Pydantic v2 · WebSocket · watchdog · APScheduler · httpx · loguru。
-前端为零依赖的原生 HTML / CSS / JavaScript。Playwright 为可选依赖，仅用于 MiMo 登录态自动刷新。
+Python 3.10+ · FastAPI · Uvicorn · Pydantic v2 · WebSocket · watchdog · APScheduler · loguru。
+前端为零依赖的原生 HTML / CSS / JavaScript。
 
 ---
 
@@ -50,7 +47,7 @@ source .venv/bin/activate
 | 用途 | 地址 |
 | --- | --- |
 | iPad / 大屏看板 | `http://<本机局域网 IP>:9090/` |
-| Mac 端编辑器 | `http://localhost:9090/editor.html` |
+| 网页编辑器 | `http://localhost:9090/editor.html` |
 | 健康检查 | `http://localhost:9090/health` |
 
 查看本机局域网 IP（macOS）：
@@ -61,32 +58,18 @@ ipconfig getifaddr en0
 
 > 端口可用环境变量覆盖：`DASHBOARD_PORT=8080 DASHBOARD_HOST=0.0.0.0 ./scripts/start_dashboard.sh`
 
-### MiMo 余额（可选）
-
-MiMo 使用浏览器登录态而非 API Key。若要监控 MiMo 额度，先手动登录一次：
-
-```bash
-python -m playwright install chromium   # 首次需要，安装浏览器内核
-python scripts/login_mimo.py            # 打开浏览器，手动登录，登录态自动保存
-```
-
-之后重启服务，MiMo Cookie 可在过期时自动刷新。
-
 ---
 
 ## 配置
 
-### `config.yaml` — 服务与外部集成
+### `config.yaml` — 服务与提醒
 
-由 `install.sh` 从 `config.yaml.example` 生成。包含：
+由 `install.sh` 从 `config.yaml.example` 生成，包含：
 
 - `server`：监听地址、端口、数据目录、看板配置文件路径。
 - `reminder`：休息提醒的时间点、文案、是否仅工作日。
-- `balance`：余额监控的刷新间隔与各提供方（DeepSeek / MiMo）的凭证。
 
-**不配置也能跑**：缺少 `config.yaml` 时程序使用内置默认值启动（余额/提醒为空或默认），可先跑起来再补。
-
-> ⚠️ **`config.yaml` 含密钥与登录态，已被 `.gitignore` 忽略，请勿提交到任何仓库。**
+**不配置也能跑**：缺少 `config.yaml` 时程序使用内置默认值启动，可先跑起来再补。
 
 ### `dashboard.json` — 看板布局
 
@@ -109,14 +92,14 @@ python scripts/login_mimo.py            # 打开浏览器，手动登录，登�
 
 ### `data/` — 运行时数据
 
-`data/*.json` 是你的日程、待办、便签、久坐记录等真实数据，首次运行自动生成，**已被 `.gitignore` 排除**。可直接编辑，保存后通过文件监听实时推送到看板。
+`data/*.json` 是你的日程、便签、久坐记录等真实数据，首次运行自动生成，**已被 `.gitignore` 排除**。可直接编辑，保存后通过文件监听实时推送到看板。
 
 ---
 
 ## 使用方式
 
-- **网页编辑**：打开 `http://localhost:9090/editor.html`，增删待办、日程、便签。
-- **直接改文件**：编辑 `data/todos.json`、`data/schedule.json`、`data/notes.json`，保存即推送。
+- **网页编辑**：打开 `http://localhost:9090/editor.html`，左边选日期加事项，右边写便签。
+- **直接改文件**：编辑 `data/calendar.json`、`data/notes.json`，保存即推送。
 - **改布局**：调整 `dashboard.json` 的组件顺序 / 大小 / 显隐。
 - **改配置**：编辑 `config.yaml` 后重启服务生效。
 
@@ -124,19 +107,19 @@ python scripts/login_mimo.py            # 打开浏览器，手动登录，登�
 
 ```bash
 # 读取某类数据
-curl http://localhost:9090/api/data/todos
+curl http://localhost:9090/api/data/calendar
 
-# 新增一条待办
-curl -X POST http://localhost:9090/api/data/todos \
+# 新增一条日历事项
+curl -X POST http://localhost:9090/api/data/calendar \
   -H "Content-Type: application/json" \
-  -d '{"text":"新的待办","priority":"high"}'
+  -d '{"text":"周会","date":"2026-10-20"}'
 
 # 健康检查
 curl http://localhost:9090/health
 ```
 
 数据类 CRUD 端点：`GET/POST /api/data/{type}`、`PUT/DELETE /api/data/{type}/{id}`；
-`{type}` 可为 `todos`、`schedule`、`notes`、`calendar` 等。
+`{type}` 可为 `calendar`、`notes`。
 
 ---
 
@@ -175,10 +158,10 @@ app/
   main.py            # FastAPI 应用装配与 WebSocket
   api/               # REST 路由（data / sitting / system）
   models/            # Pydantic 数据模型
-  services/          # 数据服务、文件监听、余额、提醒、调度、久坐…
+  services/          # 数据服务、文件监听、提醒、调度、久坐
   config/            # 配置加载（config.yaml → settings）
 static/              # 前端：index.html / editor.html / app.js / styles.css
-scripts/             # install.sh · start_dashboard.sh · login_mimo.py · launchd 模板
+scripts/             # install.sh · start_dashboard.sh · launchd 模板
 dashboard.json       # 看板布局
 config.yaml.example  # 配置示例（复制为 config.yaml 使用）
 data/                # 运行时数据（自动生成，不纳入版本库）

@@ -131,121 +131,6 @@ textarea {
   min-height: 0;
 }
 
-/* ── Lists (todos & schedule) ── */
-
-.list {
-  display: grid;
-  gap: 6px;
-}
-
-.list-item {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(32, 31, 27, 0.06);
-}
-
-.list-item:last-child {
-  border-bottom: 0;
-}
-
-.time-chip,
-.priority-chip,
-.status-chip {
-  min-width: 44px;
-  border-radius: 999px;
-  padding: 4px 8px;
-  background: rgba(101, 122, 80, 0.12);
-  color: var(--moss);
-  font-size: 11px;
-  font-weight: 700;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.priority-high {
-  background: rgba(184, 88, 50, 0.13);
-  color: var(--rust);
-}
-
-.priority-low {
-  background: rgba(53, 95, 115, 0.12);
-  color: var(--blue);
-}
-
-.item-title {
-  margin: 0 0 2px;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.item-subtitle {
-  margin: 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.todo-done .item-title {
-  color: var(--muted);
-  text-decoration: line-through;
-}
-
-.todo-done-btn {
-  align-self: center;
-  border: 1px solid var(--moss);
-  background: transparent;
-  color: var(--moss);
-  border-radius: 6px;
-  padding: 4px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
-}
-
-.todo-done-btn:hover {
-  background: var(--moss);
-  color: #fff;
-}
-
-.todo-completing {
-  opacity: 0.4;
-  transition: opacity 0.3s;
-}
-
-.todo-completing .item-title {
-  text-decoration: line-through;
-  color: var(--muted);
-}
-
-/* ── Balance ── */
-
-.balance-grid {
-  display: grid;
-  gap: 20px;
-}
-
-.balance-block {
-  display: grid;
-  gap: 6px;
-}
-
-.balance-label {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.balance-detail {
-  margin: 0;
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-}
-
 /* ── Notes ── */
 
 .notes-grid {
@@ -329,7 +214,7 @@ textarea {
   text-decoration: none;
 }
 
-/* ── Editor (unchanged) ── */
+/* ── Editor ── */
 
 .editor-body {
   min-height: 100vh;
@@ -342,15 +227,42 @@ textarea {
   padding: 32px;
 }
 
-.editor-layout {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 26px;
+.editor-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
 }
 
-.editor-panel,
-.records-panel {
+.editor-topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 750;
+}
+
+.editor-status {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.editor-topbar .link-button {
+  padding: 8px 14px;
+}
+
+.editor-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 16px;
+  align-items: start;
+  margin-top: 20px;
+}
+
+.editor-panel {
+  display: grid;
+  gap: 12px;
+  align-content: start;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 18px;
@@ -358,22 +270,67 @@ textarea {
   box-shadow: 0 16px 34px rgba(32, 31, 27, 0.08);
 }
 
-.editor-panel {
-  display: grid;
-  gap: 12px;
-  align-content: start;
-}
-
-.editor-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.editor-panel h2,
-.records-panel h2 {
+.editor-panel h2 {
   margin-bottom: 2px;
   font-size: 20px;
+}
+
+.editor-panel form {
+  display: grid;
+  gap: 12px;
+}
+
+.editor-notes-list {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid rgba(32, 31, 27, 0.1);
+  padding-top: 14px;
+}
+
+.editor-notes-list h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.note-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  border: 1px solid rgba(32, 31, 27, 0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fffdf8;
+}
+
+.note-row.is-pinned {
+  border-color: rgba(101, 122, 80, 0.45);
+}
+
+.note-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note-flag {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--moss);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.editor-panel .note-delete {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 h1, h2, p {
@@ -409,46 +366,6 @@ textarea {
 
 .check-row input {
   width: auto;
-}
-
-.records-panel {
-  margin-top: 18px;
-}
-
-.records-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 14px;
-}
-
-.record-group {
-  display: grid;
-  gap: 10px;
-}
-
-.record-item {
-  display: grid;
-  gap: 8px;
-  border: 1px solid rgba(32, 31, 27, 0.1);
-  border-radius: 8px;
-  padding: 12px;
-  background: #fffdf8;
-}
-
-.record-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.record-actions button {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 7px 10px;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
 }
 
 /* ── Sitting card ── */
@@ -813,8 +730,7 @@ textarea {
   }
 
   .dashboard-grid,
-  .editor-layout,
-  .records-grid {
+  .editor-main {
     grid-template-columns: 1fr;
   }
 
@@ -1084,57 +1000,14 @@ textarea {
   flex: 1;
 }
 
-/* 日历每日视图内的分组小标题（日历待办） */
-.calendar-group-title {
-  margin: 14px 0 8px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.calendar-group-title:first-child {
-  margin-top: 0;
-}
-
-/* ── Editor Tabs ── */
-
-.editor-tabs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 2px;
-}
-
-/* 将“打开看板”链接推到 tabs 行最右侧，并缩小内边距以与按钮对齐 */
-.editor-tabs .link-button {
-  margin-left: auto;
-  padding: 8px 14px;
-}
-
-.editor-tab {
+.calendar-add-row button {
   border: 0;
-  border-radius: 8px 8px 0 0;
-  padding: 10px 20px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 18px;
+  background: var(--ink);
+  color: #fffaf0;
+  font-weight: 750;
+  white-space: nowrap;
   cursor: pointer;
-  letter-spacing: 0.02em;
-  transition: background 0.15s, color 0.15s;
-}
-
-.editor-tab:hover {
-  color: var(--ink);
-}
-
-.editor-tab.is-active {
-  background: rgba(255, 252, 244, 0.88);
-  color: var(--ink);
-  box-shadow: 0 -2px 6px rgba(32, 31, 27, 0.06);
 }
 

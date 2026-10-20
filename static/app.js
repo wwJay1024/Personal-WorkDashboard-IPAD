@@ -1,13 +1,9 @@
 const state = {
   config: null,
   data: {
-    todos: [],
-    schedule: [],
     notes: [],
-    balance_cache: [],
     calendar: [],
   },
-  balances: {},
   sitting: null,
   sittingSyncedAt: 0,
   pendingSittingAction: null,
@@ -17,30 +13,6 @@ const state = {
 };
 
 const grid = document.querySelector("#dashboardGrid");
-
-function formatDateTime(value, options) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("zh-CN", options).format(date);
-}
-
-function formatTime(value) {
-  return formatDateTime(value, { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatMoney(value, currency = "USD") {
-  if (typeof value !== "number") return "待配置";
-  const validCurrencies = ["USD", "CNY", "EUR", "GBP", "JPY"];
-  if (!validCurrencies.includes(currency)) {
-    return `${value} ${currency}`;
-  }
-  return new Intl.NumberFormat("zh-CN", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -113,82 +85,6 @@ function widgetShell(component, body) {
 }
 
 const renderers = {
-  schedule(component) {
-    const today = new Date().toDateString();
-    const events = [...(state.data[component.data_type || "schedule"] || [])]
-      .filter((event) => event.all_day || new Date(event.start_time).toDateString() === today)
-      .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
-      .slice(0, component.options?.limit || 6);
-    const body = events.length
-      ? `<div class="list">${events
-          .map(
-            (event) => `
-              <div class="list-item">
-                <span class="time-chip">${event.all_day ? "全天" : escapeHtml(formatTime(event.start_time))}</span>
-                <div>
-                  <p class="item-title">${escapeHtml(event.title)}</p>
-                  <p class="item-subtitle">${escapeHtml([event.location, event.notes].filter(Boolean).join(" · "))}</p>
-                </div>
-              </div>
-            `,
-          )
-          .join("")}</div>`
-      : `<div class="empty">今天没有日程</div>`;
-    return widgetShell(component, body);
-  },
-
-  todos(component) {
-    const todos = [...(state.data[component.data_type || "todos"] || [])]
-      .sort((a, b) => Number(a.done) - Number(b.done))
-      .slice(0, component.options?.limit || 7);
-    const body = todos.length
-      ? `<div class="list">${todos
-          .map(
-            (todo) => `
-              <div class="list-item ${todo.done ? "todo-done" : ""}" data-todo-id="${escapeHtml(todo.id)}">
-                <span class="priority-chip priority-${escapeHtml(todo.priority)}">${priorityText(todo.priority)}</span>
-                <div>
-                  <p class="item-title">${escapeHtml(todo.text)}</p>
-                  <p class="item-subtitle">${todo.due_date ? `截止 ${escapeHtml(formatDateTime(todo.due_date, { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }))}` : "无截止时间"}</p>
-                </div>
-                ${todo.done ? "" : `<button class="todo-done-btn" onclick="completeTodo('${escapeHtml(todo.id)}')">完成</button>`}
-              </div>
-            `,
-          )
-          .join("")}</div>`
-      : `<div class="empty">待办已清空</div>`;
-    return widgetShell(component, body);
-  },
-
-  balances(component) {
-    const cachedRows = (state.data.balance_cache || []).map((item) => [item.provider, item]);
-    const rows = Object.entries({ ...Object.fromEntries(cachedRows), ...state.balances });
-    const body = rows.length
-      ? `<div class="balance-grid">${rows
-          .map(([key, item]) => {
-            const used = Number(item.used || 0);
-            const balance = Number(item.balance || 0);
-            const limit = Number(item.limit || 0);
-            const percent = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
-            const unit = item.currency || "$";
-            const isMimo = key === "mimo";
-            return `
-              <div class="balance-block">
-                <p class="balance-label">${escapeHtml(item.label || key)}</p>
-                <p class="balance-detail">
-                  ${isMimo
-                    ? `已使用 ${used} ${unit}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;剩余 ${balance} ${unit}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${percent}%`
-                    : `剩余 ${balance} ${unit}`
-                  }
-                </p>
-              </div>
-            `;
-          })
-          .join("")}</div>`
-      : `<div class="empty">暂无余额数据</div>`;
-    return widgetShell(component, body);
-  },
-
   notes(component) {
     const notes = [...(state.data[component.data_type || "notes"] || [])]
       .sort((a, b) => Number(b.pinned) - Number(a.pinned))
@@ -352,10 +248,6 @@ const renderers = {
   },
 };
 
-function priorityText(priority) {
-  return { high: "高", medium: "中", low: "低" }[priority] || "中";
-}
-
 window.sittingAction = function (action) {
   if (state.pendingSittingAction && action !== "meeting_stop") return;
 
@@ -508,7 +400,6 @@ async function loadInitial() {
   const bootstrap = await fetchJson("/api/bootstrap");
   state.config = bootstrap.config;
   state.data = { ...state.data, ...bootstrap.data };
-  state.balances = bootstrap.balances;
   syncSittingState(bootstrap.sitting);
   renderDashboard();
 }
@@ -534,9 +425,6 @@ function connectSocket() {
     }
     if (message.type === "config_update") {
       state.config = message.data;
-    }
-    if (message.type === "balance_update") {
-      state.balances = message.data;
     }
     if (message.type === "sitting_update") {
       syncSittingState(message.data);
@@ -643,23 +531,6 @@ window.changeCalendarMonth = function (delta) {
 window.openCalendarEditor = function (dateStr) {
   window.open(`/editor.html#calendar/${dateStr}`, "_blank");
 };
-
-async function completeTodo(id) {
-  const item = document.querySelector(`[data-todo-id="${id}"]`);
-  if (item) {
-    item.classList.add("todo-completing");
-    const btn = item.querySelector(".todo-done-btn");
-    if (btn) btn.remove();
-  }
-  await fetch(`/api/data/todos/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ updates: { done: true, updated_at: new Date().toISOString() } }),
-  });
-  setTimeout(async () => {
-    await fetch(`/api/data/todos/${id}`, { method: "DELETE" });
-  }, 2000);
-}
 
 loadInitial()
   .then(connectSocket)
