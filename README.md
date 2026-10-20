@@ -43,8 +43,8 @@ Python 3.10+ · FastAPI · Uvicorn · Pydantic v2 · WebSocket · watchdog · AP
 
 ```bash
 # 1. 克隆
-git clone https://github.com/wwJay1024/IPAD-dashboard.git
-cd IPAD-dashboard
+git clone https://github.com/wwJay1024/Personal-WorkDashboard-IPAD.git
+cd Personal-WorkDashboard-IPAD
 
 # 2. 一键安装：创建虚拟环境、安装依赖、按示例生成 config.yaml
 ./scripts/install.sh
