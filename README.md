@@ -1,7 +1,9 @@
 # 个人工作看板
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+
 ![FastAPI](https://img.shields.io/badge/FastAPI-WebSocket-009688)
+
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 一个**本地优先**的局域网看板系统：在 Mac（或任意一台常开电脑）上跑一个 FastAPI 服务，iPad / 手机 / 另一台电脑用浏览器打开就能看。日历、便签、久坐计时通过 WebSocket 实时同步——在电脑上改一下，iPad 秒级刷新。
@@ -13,9 +15,9 @@
 
 ## 截图
 
-| 看板（iPad 横屏展示） | 编辑器（Mac 上维护内容） |
+| 看板页 | 后台页 |
 | --- | --- |
-| [![看板](docs/images/dashboard.jpg)](docs/images/dashboard.jpg) | [![编辑器](docs/images/editor.jpg)](docs/images/editor.jpg) |
+| 看板  | 编辑器 |
 
 左侧看板三分区：日历、久坐计时、便签。右侧编辑器是单页布局——左边周历选日期加事项，右边写便签，改完看板自动同步。
 
@@ -23,18 +25,18 @@
 
 ## 功能
 
-| 组件 | 说明 |
-| --- | --- |
-| 日历 `calendar` | 工作日周历视图，按天记录事项，可勾选完成 |
-| 便签 `notes` | 便签墙，置顶优先 |
+| 组件             | 说明                              |
+| -------------- | ------------------------------- |
+| 日历 `calendar`  | 工作日周历视图，按天记录事项，可勾选完成            |
+| 便签 `notes`     | 便签墙，置顶优先                        |
 | 久坐计时 `sitting` | 连续久坐计时与提醒，含离座 / 回座 / 结束计时 / 去开会 |
-| 休息提醒 | 按配置的时间点在看板上弹出休息提示 |
+| 休息提醒           | 按配置的时间点在看板上弹出休息提示               |
 
 另含：单页网页编辑器（`/editor.html`）、健康检查。
 
 ## 技术栈
 
-Python 3.10+ · FastAPI · Uvicorn · Pydantic v2 · WebSocket · watchdog · APScheduler · loguru。
+Python 3.10+ · FastAPI · Uvicorn · Pydantic v2 · WebSocket · watchdog · APScheduler · loguru。  
 前端为零依赖的原生 HTML / CSS / JavaScript。
 
 ---
@@ -56,11 +58,11 @@ source .venv/bin/activate
 
 启动后访问：
 
-| 用途 | 地址 |
-| --- | --- |
-| iPad / 大屏看板 | `http://<本机局域网 IP>:9090/` |
-| 网页编辑器 | `http://localhost:9090/editor.html` |
-| 健康检查 | `http://localhost:9090/health` |
+| 用途          | 地址                                  |
+| ----------- | ----------------------------------- |
+| iPad / 大屏看板 | `http://<本机局域网 IP>:9090/`           |
+| 网页编辑器       | `http://localhost:9090/editor.html` |
+| 健康检查        | `http://localhost:9090/health`      |
 
 查看本机局域网 IP（macOS）：
 
@@ -79,9 +81,41 @@ ipconfig getifaddr en0
 由 `install.sh` 从 `config.yaml.example` 生成，包含：
 
 - `server`：监听地址、端口、数据目录、看板配置文件路径。
-- `reminder`：休息提醒的时间点、文案、是否仅工作日。
+- `reminder`：休息提醒，详见下节。
 
 **不配置也能跑**：缺少 `config.yaml` 时程序使用内置默认值启动，可先跑起来再补。
+
+### 休息提醒怎么设置
+
+提醒完全由 `config.yaml` 的 `reminder` 段控制，没有其他入口：
+
+```yaml
+reminder:
+  enabled: true                 # 总开关
+  times:                        # 提醒时刻，24 小时制 HH:MM，想提醒几次就写几行
+    - "10:00"
+    - "11:00"
+    - "15:00"
+    - "16:30"
+  weekdays_only: true           # 只在周一至周五触发
+  message: 该休息一下了          # 弹层正文
+  break_duration_seconds: 300   # 弹层倒计时秒数，归零自动关闭
+```
+
+| 字段 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `enabled` | bool | `true` | 总开关，`false` 则完全不再提醒 |
+| `times` | 字符串数组 | `10:00`、`11:00`、`15:00`、`16:30` | 触发时刻，必须写成 `HH:MM`（如 `09:30`），按分钟精确匹配 |
+| `weekdays_only` | bool | `true` | `true` 仅周一到周五；`false` 则每天 |
+| `message` | string | `该休息一下了` | 弹层标题文案 |
+| `break_duration_seconds` | int | `300` | 弹层倒计时长度（秒），到 0 自动关闭 |
+
+运行行为：
+
+- 服务端每 30 秒比对一次当前时间，命中 `times` 中的时刻就通过 WebSocket 广播，**所有已打开的看板页面同时弹出全屏提醒**，可点「继续工作」提前关掉。
+- 每个时刻每天只触发一次，跨天自动重置。
+- 属于即时推送：那一刻没开着的页面收不到，也不会补发或重放。
+- 改完 `config.yaml` 要重启服务才生效。
 
 ### `dashboard.json` — 看板布局
 
@@ -130,7 +164,7 @@ curl -X POST http://localhost:9090/api/data/calendar \
 curl http://localhost:9090/health
 ```
 
-数据类 CRUD 端点：`GET/POST /api/data/{type}`、`PUT/DELETE /api/data/{type}/{id}`；
+数据类 CRUD 端点：`GET/POST /api/data/{type}`、`PUT/DELETE /api/data/{type}/{id}`；  
 `{type}` 可为 `calendar`、`notes`。
 
 久坐计时走独立端点（前缀 `/api/sitting`）：`GET /status`，`POST /start`、`/stop`、`/away`、`/back`、`/meeting/start`、`/meeting/stop`、`/reminder-response`。
