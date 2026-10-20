@@ -1,9 +1,7 @@
 # 个人工作看板
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-
 ![FastAPI](https://img.shields.io/badge/FastAPI-WebSocket-009688)
-
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 一个**本地优先**的局域网看板系统：在 Mac（或任意一台常开电脑）上跑一个 FastAPI 服务，iPad / 手机 / 另一台电脑用浏览器打开就能看。日历、便签、久坐计时通过 WebSocket 实时同步——在电脑上改一下，iPad 秒级刷新。
@@ -15,9 +13,9 @@
 
 ## 截图
 
-| 看板页 | 后台页 |
+| 看板（iPad 横屏展示） | 编辑器（Mac 上维护内容） |
 | --- | --- |
-| 看板  | 编辑器 |
+| [![看板](docs/images/dashboard.jpg)](docs/images/dashboard.jpg) | [![编辑器](docs/images/editor.jpg)](docs/images/editor.jpg) |
 
 左侧看板三分区：日历、久坐计时、便签。右侧编辑器是单页布局——左边周历选日期加事项，右边写便签，改完看板自动同步。
 
