@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>iPad 数据看板</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="dashboard-body">
+    <main class="dashboard-shell">
+      <section class="dashboard-grid" id="dashboardGrid" aria-live="polite"></section>
+    </main>
+
+    <section class="break-overlay" id="breakOverlay" aria-hidden="true">
+      <div class="break-panel">
+        <p>休息提醒</p>
+        <h2 id="breakMessage">该休息一下了</h2>
+        <span id="breakCountdown">05:00</span>
+        <button type="button" id="dismissBreak">继续工作</button>
+      </div>
+    </section>
+
+    <section class="sitting-reminder-overlay" id="sittingReminderOverlay" aria-hidden="true">
+      <div class="sitting-reminder-panel">
+        <div class="sitting-reminder-icon">&#x1F9D8;</div>
+        <h2 id="sittingReminderMessage">你已经连续久坐 1 小时</h2>
+        <p class="sitting-reminder-sub">建议起身活动 5-10 分钟</p>
+        <div class="sitting-reminder-buttons">
+          <button class="sitting-reminder-btn sitting-reminder-break" onclick="sittingAction('take_break')">去休息</button>
+          <button class="sitting-reminder-btn sitting-reminder-keep" onclick="sittingAction('keep_working')">继续干</button>
+        </div>
+      </div>
+    </section>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+# iPad Dashboard 配置示例
+#
+# 用法：复制为 config.yaml 后按需修改
+#   cp config.yaml.example config.yaml
+#
+# 安全提示：config.yaml 中可能含有 Cookie、API Key、账号密码等敏感凭证，
+# 已被 .gitignore 排除，请勿提交到版本库。
+
+server:
+  host: 0.0.0.0
+  port: 9090
+  data_dir: data
+  static_dir: static
+  dashboard_config_path: dashboard.json
+
+# 定时休息提醒（到点后在看板上弹出提示）
+reminder:
+  enabled: true
+  times:
+    - "10:00"
+    - "11:00"
+    - "15:00"
+    - "16:30"
+  weekdays_only: true
+  message: 该休息一下了
+  break_duration_seconds: 300
+
+# 大模型余额监控（可选；不配置则不显示余额组件）
+balance:
+  update_interval_minutes: 15
+  alert_threshold: 5.0
+  providers:
+    # DeepSeek：填入 API Key 即可
+    - name: DeepSeek
+      type: deepseek
+      endpoint: https://api.deepseek.com/user/balance
+      api_key: "sk-替换为你的-DEEPSEEK-KEY"
+      unit: 元
+
+    # MiMo：使用浏览器登录态 Cookie。
+    # 首次运行 `python scripts/login_mimo.py` 手动登录一次，
+    # 登录状态会保存到 data/browser_state，之后 Cookie 可自动刷新。
+    - name: MiMo
+      type: mimo
+      endpoint: https://platform.xiaomimimo.com/api/v1/tokenPlan/usage
+      cookie: 'api-platform_serviceToken="..."; userId="..."; api-platform_slh="..."; api-platform_ph="..."'
+      unit: 亿

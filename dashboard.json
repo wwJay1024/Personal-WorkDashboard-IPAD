@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "title": "iPad 数据看板",
+  "subtitle": "",
+  "theme": "warm-ink",
+  "components": [
+    {
+      "id": "calendar",
+      "type": "calendar",
+      "title": "日历",
+      "size": "large-tall",
+      "data_type": "calendar"
+    },
+    {
+      "id": "sitting",
+      "type": "sitting",
+      "title": "久坐计时",
+      "size": "medium",
+      "data_type": "sitting",
+      "options": {
+        "caption": "连续久坐提醒"
+      }
+    },
+    {
+      "id": "notes",
+      "type": "notes",
+      "title": "便签",
+      "size": "medium",
+      "data_type": "notes",
+      "options": {
+        "caption": "置顶优先",
+        "limit": 6
+      }
+    }
+  ]
+}

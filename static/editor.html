@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>看板编辑器</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="editor-body">
+    <main class="editor-shell">
+      <div class="editor-tabs">
+        <button class="editor-tab is-active" data-tab="content">内容维护</button>
+        <button class="editor-tab" data-tab="calendar">日历管理</button>
+        <a class="link-button" href="/">打开看板</a>
+      </div>
+
+      <section class="editor-layout" id="contentTab">
+        <form class="editor-panel" id="todoForm">
+          <h2>新增待办</h2>
+          <label>
+            内容
+            <input name="text" required placeholder="例如：整理周报" />
+          </label>
+          <label>
+            优先级
+            <select name="priority">
+              <option value="medium">中</option>
+              <option value="high">高</option>
+              <option value="low">低</option>
+            </select>
+          </label>
+          <div class="editor-row">
+            <label>
+              截止日期
+              <input name="due_date_date" type="date" />
+            </label>
+            <label>
+              截止时间
+              <select name="due_date_time">
+                <option value="">不限</option>
+                <option value="08:00">08:00</option><option value="08:30">08:30</option>
+                <option value="09:00">09:00</option><option value="09:30">09:30</option>
+                <option value="10:00">10:00</option><option value="10:30">10:30</option>
+                <option value="11:00">11:00</option><option value="11:30">11:30</option>
+                <option value="12:00">12:00</option><option value="12:30">12:30</option>
+                <option value="13:00">13:00</option><option value="13:30">13:30</option>
+                <option value="14:00">14:00</option><option value="14:30">14:30</option>
+                <option value="15:00">15:00</option><option value="15:30">15:30</option>
+                <option value="16:00">16:00</option><option value="16:30">16:30</option>
+                <option value="17:00">17:00</option><option value="17:30">17:30</option>
+                <option value="18:00">18:00</option><option value="18:30">18:30</option>
+                <option value="19:00">19:00</option><option value="19:30">19:30</option>
+                <option value="20:00">20:00</option><option value="20:30">20:30</option>
+                <option value="21:00">21:00</option><option value="21:30">21:30</option>
+                <option value="22:00">22:00</option><option value="22:30">22:30</option>
+                <option value="23:00">23:00</option><option value="23:30">23:30</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit">添加待办</button>
+        </form>
+
+        <form class="editor-panel" id="eventForm">
+          <h2>新增日程</h2>
+          <label>
+            标题
+            <input name="title" required placeholder="例如：产品评审" />
+          </label>
+          <div class="editor-row">
+            <label>
+              日期
+              <input name="start_date" type="date" required />
+            </label>
+            <label>
+              时间
+              <select name="start_time">
+                <option value="">不限</option>
+                <option value="08:00">08:00</option><option value="08:30">08:30</option>
+                <option value="09:00">09:00</option><option value="09:30">09:30</option>
+                <option value="10:00">10:00</option><option value="10:30">10:30</option>
+                <option value="11:00">11:00</option><option value="11:30">11:30</option>
+                <option value="12:00">12:00</option><option value="12:30">12:30</option>
+                <option value="13:00">13:00</option><option value="13:30">13:30</option>
+                <option value="14:00">14:00</option><option value="14:30">14:30</option>
+                <option value="15:00">15:00</option><option value="15:30">15:30</option>
+                <option value="16:00">16:00</option><option value="16:30">16:30</option>
+                <option value="17:00">17:00</option><option value="17:30">17:30</option>
+                <option value="18:00">18:00</option><option value="18:30">18:30</option>
+                <option value="19:00">19:00</option><option value="19:30">19:30</option>
+                <option value="20:00">20:00</option><option value="20:30">20:30</option>
+                <option value="21:00">21:00</option><option value="21:30">21:30</option>
+                <option value="22:00">22:00</option><option value="22:30">22:30</option>
+                <option value="23:00">23:00</option><option value="23:30">23:30</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            地点
+            <input name="location" placeholder="会议室 / 线上" />
+          </label>
+          <button type="submit">添加日程</button>
+        </form>
+
+        <form class="editor-panel" id="noteForm">
+          <h2>新增便签</h2>
+          <label>
+            内容
+            <textarea name="content" required rows="5" placeholder="写一条要留在看板上的提醒"></textarea>
+          </label>
+          <label class="check-row">
+            <input name="pinned" type="checkbox" />
+            置顶
+          </label>
+          <button type="submit">添加便签</button>
+        </form>
+      </section>
+
+      <section class="records-panel" id="recordsPanel">
+        <div>
+          <h2>当前内容</h2>
+          <p id="editorStatus">正在加载</p>
+        </div>
+        <div class="records-grid" id="recordsGrid"></div>
+      </section>
+
+      <section class="editor-calendar-layout" id="calendarTab" style="display:none">
+        <div class="editor-calendar-mini" id="calendarMini"></div>
+        <div class="editor-calendar-list">
+          <h3 id="calendarSelectedDate">选择日期</h3>
+          <div id="calendarItemsList"></div>
+          <div class="calendar-add-row">
+            <input id="calendarNewItem" placeholder="添加今日待办" />
+            <button id="calendarAddBtn">添加</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/editor.js" defer></script>
+  </body>
+</html>

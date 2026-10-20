@@ -1,0 +1,189 @@
+# iPad Dashboard · iPad 数据看板
+
+一个**本地优先**的局域网看板系统：在 Mac（或任意一台常开电脑）上跑一个 FastAPI 服务， iPad / 手机 / 另一台电脑用浏览器打开就能看。日程、待办、便签、大模型余额、久坐计时、休息提醒，全部通过 WebSocket 实时同步——在 Mac 上改一下，iPad 秒级刷新。
+
+- 🖥 **本地优先**：数据以 JSON 文件存在本机，无云依赖、无数据库，随改随看。
+- ⚡ **实时推送**：文件监听 + WebSocket，编辑 `data/*.json` 或使用网页编辑器，看板立即更新。
+- 📱 **为大屏而生**：横屏 iPad 常驻展示，组件可自由排序、调整大小。
+- 🔧 **易于扩展**：新增一个组件只需四个文件级步骤（见下文）。
+- 🔐 **凭证不外泄**：密钥/登录态只放本地 `config.yaml`，已默认被 `.gitignore` 排除。
+
+---
+
+## 功能
+
+| 组件 | 说明 |
+| --- | --- |
+| 日程 `schedule` | 今日日程，按时间排序，支持全天事件 |
+| 待办 `todos` | 待办清单，支持优先级 |
+| 便签 `notes` | 便签，置顶优先 |
+| 模型余额 `balances` | DeepSeek（API Key）、MiMo（浏览器 Cookie，可自动刷新）余额/额度 |
+| 久坐计时 `sitting` | 连续久坐计时与提醒，含离座/回座 |
+| 日历 `calendar` | 月历视图 |
+
+另含：Mac 端网页编辑器（`/editor.html`）、定时休息提醒、健康检查。
+
+## 技术栈
+
+Python 3.10+ · FastAPI · Uvicorn · Pydantic v2 · WebSocket · watchdog · APScheduler · httpx · loguru。
+前端为零依赖的原生 HTML / CSS / JavaScript。Playwright 为可选依赖，仅用于 MiMo 登录态自动刷新。
+
+---
+
+## 快速开始
+
+```bash
+# 1. 克隆
+git clone https://github.com/wwJay1024/IPAD-dashboard.git
+cd IPAD-dashboard
+
+# 2. 一键安装：创建虚拟环境、安装依赖、按示例生成 config.yaml
+./scripts/install.sh
+source .venv/bin/activate
+
+# 3. 启动（默认监听 0.0.0.0:9090）
+./scripts/start_dashboard.sh
+```
+
+启动后访问：
+
+| 用途 | 地址 |
+| --- | --- |
+| iPad / 大屏看板 | `http://<本机局域网 IP>:9090/` |
+| Mac 端编辑器 | `http://localhost:9090/editor.html` |
+| 健康检查 | `http://localhost:9090/health` |
+
+查看本机局域网 IP（macOS）：
+
+```bash
+ipconfig getifaddr en0
+```
+
+> 端口可用环境变量覆盖：`DASHBOARD_PORT=8080 DASHBOARD_HOST=0.0.0.0 ./scripts/start_dashboard.sh`
+
+### MiMo 余额（可选）
+
+MiMo 使用浏览器登录态而非 API Key。若要监控 MiMo 额度，先手动登录一次：
+
+```bash
+python -m playwright install chromium   # 首次需要，安装浏览器内核
+python scripts/login_mimo.py            # 打开浏览器，手动登录，登录态自动保存
+```
+
+之后重启服务，MiMo Cookie 可在过期时自动刷新。
+
+---
+
+## 配置
+
+### `config.yaml` — 服务与外部集成
+
+由 `install.sh` 从 `config.yaml.example` 生成。包含：
+
+- `server`：监听地址、端口、数据目录、看板配置文件路径。
+- `reminder`：休息提醒的时间点、文案、是否仅工作日。
+- `balance`：余额监控的刷新间隔与各提供方（DeepSeek / MiMo）的凭证。
+
+**不配置也能跑**：缺少 `config.yaml` 时程序使用内置默认值启动（余额/提醒为空或默认），可先跑起来再补。
+
+> ⚠️ **`config.yaml` 含密钥与登录态，已被 `.gitignore` 忽略，请勿提交到任何仓库。**
+
+### `dashboard.json` — 看板布局
+
+控制看板上显示哪些组件、顺序、标题、大小与子配置。示例：
+
+```json
+{
+  "version": "1.0",
+  "title": "iPad 数据看板",
+  "theme": "warm-ink",
+  "components": [
+    { "id": "calendar", "type": "calendar", "title": "日历", "size": "large-tall", "data_type": "calendar" },
+    { "id": "sitting",  "type": "sitting",  "title": "久坐计时", "size": "medium", "options": { "caption": "连续久坐提醒" } },
+    { "id": "notes",    "type": "notes",    "title": "便签", "size": "medium", "data_type": "notes", "options": { "limit": 6 } }
+  ]
+}
+```
+
+`type` 需为上文「功能」表中已支持的组件类型。若 `dashboard.json` 不存在，服务会生成一份默认布局。
+
+### `data/` — 运行时数据
+
+`data/*.json` 是你的日程、待办、便签、久坐记录等真实数据，首次运行自动生成，**已被 `.gitignore` 排除**。可直接编辑，保存后通过文件监听实时推送到看板。
+
+---
+
+## 使用方式
+
+- **网页编辑**：打开 `http://localhost:9090/editor.html`，增删待办、日程、便签。
+- **直接改文件**：编辑 `data/todos.json`、`data/schedule.json`、`data/notes.json`，保存即推送。
+- **改布局**：调整 `dashboard.json` 的组件顺序 / 大小 / 显隐。
+- **改配置**：编辑 `config.yaml` 后重启服务生效。
+
+### API 示例
+
+```bash
+# 读取某类数据
+curl http://localhost:9090/api/data/todos
+
+# 新增一条待办
+curl -X POST http://localhost:9090/api/data/todos \
+  -H "Content-Type: application/json" \
+  -d '{"text":"新的待办","priority":"high"}'
+
+# 健康检查
+curl http://localhost:9090/health
+```
+
+数据类 CRUD 端点：`GET/POST /api/data/{type}`、`PUT/DELETE /api/data/{type}/{id}`；
+`{type}` 可为 `todos`、`schedule`、`notes`、`calendar` 等。
+
+---
+
+## 扩展一个组件
+
+1. 在 `app/models/` 增加对应的 Pydantic 模型（若有需要持久化的记录）。
+2. 在 `app/main.py` 的 `data_service.register(...)` 注册数据类型。
+3. 在 `static/app.js` 的 `renderers` 中新增同名渲染函数。
+4. 在 `dashboard.json` 的 `components` 增加一条该组件的配置。
+
+---
+
+## 开机自启（macOS）
+
+使用 `launchd` 常驻运行：
+
+```bash
+PROJECT_DIR="$(pwd)"
+sed "s#__PROJECT_DIR__#$PROJECT_DIR#g" scripts/launchd.plist.template \
+  > ~/Library/LaunchAgents/com.local.ipad-dashboard.plist
+launchctl load ~/Library/LaunchAgents/com.local.ipad-dashboard.plist
+```
+
+停止 / 卸载：
+
+```bash
+launchctl unload ~/Library/LaunchAgents/com.local.ipad-dashboard.plist
+```
+
+---
+
+## 目录结构
+
+```
+app/
+  main.py            # FastAPI 应用装配与 WebSocket
+  api/               # REST 路由（data / sitting / system）
+  models/            # Pydantic 数据模型
+  services/          # 数据服务、文件监听、余额、提醒、调度、久坐…
+  config/            # 配置加载（config.yaml → settings）
+static/              # 前端：index.html / editor.html / app.js / styles.css
+scripts/             # install.sh · start_dashboard.sh · login_mimo.py · launchd 模板
+dashboard.json       # 看板布局
+config.yaml.example  # 配置示例（复制为 config.yaml 使用）
+data/                # 运行时数据（自动生成，不纳入版本库）
+```
+
+## 许可证
+
+见仓库根目录 `LICENSE`。
