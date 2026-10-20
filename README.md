@@ -1,11 +1,23 @@
 # 个人工作看板
 
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-WebSocket-009688)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 一个**本地优先**的局域网看板系统：在 Mac（或任意一台常开电脑）上跑一个 FastAPI 服务，iPad / 手机 / 另一台电脑用浏览器打开就能看。日历、便签、久坐计时通过 WebSocket 实时同步——在电脑上改一下，iPad 秒级刷新。
 
 - 🖥 **本地优先**：数据以 JSON 文件存在本机，无云依赖、无数据库，随改随看。
 - ⚡ **实时推送**：文件监听 + WebSocket，编辑 `data/*.json` 或使用网页编辑器，看板立即更新。
 - 📱 **为大屏而生**：横屏 iPad 常驻展示，组件可自由排序、调整大小。
 - 🔧 **易于扩展**：新增一个组件只需四个文件级步骤（见下文）。
+
+## 截图
+
+| 看板（iPad 横屏展示） | 编辑器（Mac 上维护内容） |
+| --- | --- |
+| [![看板](docs/images/dashboard.jpg)](docs/images/dashboard.jpg) | [![编辑器](docs/images/editor.jpg)](docs/images/editor.jpg) |
+
+左侧看板三分区：日历、久坐计时、便签。右侧编辑器是单页布局——左边周历选日期加事项，右边写便签，改完看板自动同步。
 
 ---
 
@@ -15,10 +27,10 @@
 | --- | --- |
 | 日历 `calendar` | 工作日周历视图，按天记录事项，可勾选完成 |
 | 便签 `notes` | 便签墙，置顶优先 |
-| 久坐计时 `sitting` | 连续久坐计时与提醒，含离座/回座/开会 |
+| 久坐计时 `sitting` | 连续久坐计时与提醒，含离座 / 回座 / 结束计时 / 去开会 |
 | 休息提醒 | 按配置的时间点在看板上弹出休息提示 |
 
-另含：网页编辑器（`/editor.html`）、健康检查。
+另含：单页网页编辑器（`/editor.html`）、健康检查。
 
 ## 技术栈
 
@@ -82,8 +94,8 @@ ipconfig getifaddr en0
   "theme": "warm-ink",
   "components": [
     { "id": "calendar", "type": "calendar", "title": "日历", "size": "large-tall", "data_type": "calendar" },
-    { "id": "sitting",  "type": "sitting",  "title": "久坐计时", "size": "medium", "options": { "caption": "连续久坐提醒" } },
-    { "id": "notes",    "type": "notes",    "title": "便签", "size": "medium", "data_type": "notes", "options": { "limit": 6 } }
+    { "id": "sitting",  "type": "sitting",  "title": "久坐计时", "size": "medium", "data_type": "sitting", "options": { "caption": "连续久坐提醒" } },
+    { "id": "notes",    "type": "notes",    "title": "便签", "size": "medium", "data_type": "notes", "options": { "caption": "置顶优先", "limit": 6 } }
   ]
 }
 ```
@@ -98,7 +110,7 @@ ipconfig getifaddr en0
 
 ## 使用方式
 
-- **网页编辑**：打开 `http://localhost:9090/editor.html`，左边选日期加事项，右边写便签。
+- **网页编辑**：打开 `http://localhost:9090/editor.html`，左边选日期加事项，右边写便签，改动即时同步到看板。
 - **直接改文件**：编辑 `data/calendar.json`、`data/notes.json`，保存即推送。
 - **改布局**：调整 `dashboard.json` 的组件顺序 / 大小 / 显隐。
 - **改配置**：编辑 `config.yaml` 后重启服务生效。
@@ -120,6 +132,8 @@ curl http://localhost:9090/health
 
 数据类 CRUD 端点：`GET/POST /api/data/{type}`、`PUT/DELETE /api/data/{type}/{id}`；
 `{type}` 可为 `calendar`、`notes`。
+
+久坐计时走独立端点（前缀 `/api/sitting`）：`GET /status`，`POST /start`、`/stop`、`/away`、`/back`、`/meeting/start`、`/meeting/stop`、`/reminder-response`。
 
 ---
 
@@ -157,11 +171,12 @@ launchctl unload ~/Library/LaunchAgents/com.local.ipad-dashboard.plist
 app/
   main.py            # FastAPI 应用装配与 WebSocket
   api/               # REST 路由（data / sitting / system）
-  models/            # Pydantic 数据模型
-  services/          # 数据服务、文件监听、提醒、调度、久坐
+  models/            # Pydantic 数据模型（CalendarItem / Note / SittingState / DashboardConfig）
+  services/          # 数据服务、文件监听、久坐计时、休息提醒、调度
   config/            # 配置加载（config.yaml → settings）
-static/              # 前端：index.html / editor.html / app.js / styles.css
+static/              # 前端：index.html / editor.html / app.js / editor.js / styles.css
 scripts/             # install.sh · start_dashboard.sh · launchd 模板
+docs/images/         # README 截图
 dashboard.json       # 看板布局
 config.yaml.example  # 配置示例（复制为 config.yaml 使用）
 data/                # 运行时数据（自动生成，不纳入版本库）
@@ -169,4 +184,4 @@ data/                # 运行时数据（自动生成，不纳入版本库）
 
 ## 许可证
 
-见仓库根目录 `LICENSE`。
+见仓库根目录 `LICENSE`（MIT）。
